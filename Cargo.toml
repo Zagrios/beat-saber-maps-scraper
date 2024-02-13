@@ -23,7 +23,6 @@ chrono = "0.4.34"
 tar = "0.4.40"
 flate2 = "1.0.28"
 rust_decimal = "1.34.3"
-openssl = { version = "0.10", features = ["vendored"] }
 
 [build-dependencies]
 prost-build = "0.12.3"
