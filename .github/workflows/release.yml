@@ -37,8 +37,21 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
-      - name: Install Protoc
-        uses: arduino/setup-protoc@v3
+      - name: Install Protoc (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y protobuf-compiler
+          protoc --version # Pour vérifier l'installation
+          echo "PROTOC=$(which protoc)" >> $GITHUB_ENV
+      
+        - name: Install Protoc (Windows)
+          if: runner.os == 'Windows'
+          run: |
+            choco install protoc -y
+            protoc --version
+            echo "PROTOC=$(Get-Command protoc).Source" | Out-String | Foreach {$_ -replace "`r`n", ""} | Foreach { "PROTOC=$_" } >> $GITHUB_ENV
+          shell: powershell
 
       - name: Set PROTOC environment variable (Linux)
         if: runner.os == 'Linux'
