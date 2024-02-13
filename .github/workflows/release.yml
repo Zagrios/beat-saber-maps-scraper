@@ -45,13 +45,13 @@ jobs:
           protoc --version # Pour vérifier l'installation
           echo "PROTOC=$(which protoc)" >> $GITHUB_ENV
       
-        - name: Install Protoc (Windows)
-          if: runner.os == 'Windows'
-          run: |
-            choco install protoc -y
-            protoc --version
-            echo "PROTOC=$(Get-Command protoc).Source" | Out-String | Foreach {$_ -replace "`r`n", ""} | Foreach { "PROTOC=$_" } >> $GITHUB_ENV
-          shell: powershell
+      - name: Install Protoc (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          choco install protoc -y
+          protoc --version
+          echo "PROTOC=$(Get-Command protoc).Source" | Out-String | Foreach {$_ -replace "`r`n", ""} | Foreach { "PROTOC=$_" } >> $GITHUB_ENV
+        shell: powershell
 
       - name: Set PROTOC environment variable (Linux)
         if: runner.os == 'Linux'
