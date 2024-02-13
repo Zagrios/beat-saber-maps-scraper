@@ -40,6 +40,14 @@ jobs:
       - name: Install Protoc
         uses: arduino/setup-protoc@v3
 
+      - name: Set PROTOC environment variable (Linux)
+        if: runner.os == 'Linux'
+        run: echo "PROTOC=$(which protoc)" >> $GITHUB_ENV
+
+      - name: Set PROTOC environment variable (Windows)
+        if: runner.os == 'Windows'
+        run: echo "PROTOC=$(Get-Command protoc.exe).Source" | Out-String | Foreach {$_.Trim()} >> $GITHUB_ENV
+
       - name: Build
         uses: actions-rs/cargo@v1
         with:
