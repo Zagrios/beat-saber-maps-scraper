@@ -53,5 +53,5 @@ jobs:
         name: Release ${{ github.sha }}
         tag: "v${{ github.sha }}"
         commit: ${{ github.sha }}
-        artifacts: "./rust-release-binary/beat-saber-maps-scraper.exe"
+        artifacts: "./rust-release-binary*"
         draft: true
