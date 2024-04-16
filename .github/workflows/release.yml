@@ -35,6 +35,8 @@ jobs:
     name: Publish Release
     needs: build
     runs-on: windows-latest
+    permissions:
+      contents: write
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v3
