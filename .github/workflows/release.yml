@@ -19,6 +19,9 @@ jobs:
         profile: minimal
         override: true
 
+    - name: Install Protobuf Compiler
+      run: choco install protoc
+
     - name: Build Release
       run: cargo build --release
 
