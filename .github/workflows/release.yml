@@ -1,0 +1,63 @@
+name: Build and Release Rust Project
+
+on: 
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Rust Project
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        profile: minimal
+        override: true
+
+    - name: Build Release
+      run: cargo build --release
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: rust-release-binary
+        path: target/release/beat-saber-maps-scraper.exe
+
+  publish:
+    name: Publish Release
+    needs: build
+    runs-on: windows-latest
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Download Artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: rust-release-binary
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.sha }}
+        draft: true
+        prerelease: false
+
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./rust-release-binary/beat-saber-maps-scraper.exe
+        asset_name: beat-saber-maps-scraper.exe
+        asset_content_type: application/octet-stream
