@@ -45,6 +45,7 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: rust-release-binary
+        path: ./
 
     - name: Create Release
       id: create_release
@@ -53,5 +54,5 @@ jobs:
         name: Release ${{ github.sha }}
         tag: "v${{ github.sha }}"
         commit: ${{ github.sha }}
-        artifacts: "./rust-release-binary*"
+        artifacts: "beat-saber-maps-scraper.exe"
         draft: true
