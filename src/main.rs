@@ -5,7 +5,6 @@ mod utils;
 use std::collections::HashMap;
 use std::io::{Read, Write};
 use std::path::PathBuf;
-use once_cell::sync::Lazy;
 use crate::api::beat_leader::leaderboard::leaderboards;
 use crate::api::score_saber::leaderboard::leaderboards as score_saber_leaderboards;
 use crate::api::beat_leader::models::models::DifficultyDescription;
@@ -22,14 +21,14 @@ const FILENAME : &str = "song_details_cache_v1";
 #[tokio::main]
 async fn main() {
 
-    let (bsv_maps, bl_maps_diffs, a) = tokio::join!(scrap_bsv_maps(), scrap_bl_maps_diffs(), scrap_score_saber_leaderboards());
+    let (bsv_maps, bl_maps_diffs, score_saber_leaderboards) = tokio::join!(scrap_bsv_maps(), scrap_bl_maps_diffs(), scrap_score_saber_leaderboards());
 
     let mut song_details: Vec<SongDetails> = Vec::new();
 
     for bsv_map in bsv_maps {
         let hash = &bsv_map.versions.first().unwrap().hash;
         let bl_map_difficulties = bl_maps_diffs.get(hash);
-        let ss_leaderboards = a.get(hash);
+        let ss_leaderboards = score_saber_leaderboards.get(hash);
         song_details.push(SongDetails::new(&bsv_map, bl_map_difficulties, ss_leaderboards));
     }
 
@@ -40,7 +39,7 @@ async fn main() {
     let song_details_cache = SongDetailsCache {
         total: song_details.len() as u32,
         songs: song_details,
-        last_updated: chrono::Utc::now().timestamp(),
+        last_updated: chrono::Utc::now().timestamp() as u32
     };
 
     write_proto_message(&song_details_cache);
@@ -101,7 +100,7 @@ async fn scrap_bsv_maps() -> Vec<MapDetail> {
     loop {
         let params = SearchRequestParams {
             after: None,
-            automapper: None,
+            automapper: Some(true),
             before: last_updated,
             pageSize: Some(100),
             sort: Some(SearchRequestSort::FIRST_PUBLISHED),
@@ -123,7 +122,6 @@ async fn scrap_bsv_maps() -> Vec<MapDetail> {
             println!("Scraped {} maps from BeatSaver", res.len());
         }
     }
-
 
     return res;
 }
@@ -151,6 +149,7 @@ async fn scrap_bl_maps_diffs() -> HashMap<String, Vec<DifficultyDescription>> {
         if page % 10 == 0 {
             println!("Scraped {} maps from {} pages of BeatLeader", res.len(), page);
         }
+
     }
 
     println!("Scraped {} maps from BeatLeader", res.len());
