@@ -46,21 +46,7 @@ jobs:
 
     - name: Create Release
       id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      uses: actions/checkout@v3
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.sha }}
+        artifacts: "./rust-release-binary/beat-saber-maps-scraper.exe"
         draft: true
-        prerelease: false
-
-    - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./rust-release-binary/beat-saber-maps-scraper.exe
-        asset_name: beat-saber-maps-scraper.exe
-        asset_content_type: application/octet-stream
