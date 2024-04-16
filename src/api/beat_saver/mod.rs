@@ -2,7 +2,6 @@ pub mod models;
 
 use once_cell::sync::Lazy;
 use url::Url;
-use super::get_http_client;
 
 static BASE_URL: Lazy<Url> = Lazy::new(|| Url::parse("https://beatsaver.com/api/").unwrap());
 

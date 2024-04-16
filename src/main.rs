@@ -5,7 +5,6 @@ mod utils;
 use std::collections::HashMap;
 use std::io::{Read, Write};
 use std::path::PathBuf;
-use once_cell::sync::Lazy;
 use crate::api::beat_leader::leaderboard::leaderboards;
 use crate::api::score_saber::leaderboard::leaderboards as score_saber_leaderboards;
 use crate::api::beat_leader::models::models::DifficultyDescription;
