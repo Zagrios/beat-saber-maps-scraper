@@ -48,5 +48,6 @@ jobs:
       id: create_release
       uses: ncipollo/release-action@v1
       with:
+        name: Release ${{ github.sha }}
         artifacts: "./rust-release-binary/beat-saber-maps-scraper.exe"
         draft: true
