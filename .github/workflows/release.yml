@@ -1,35 +1,36 @@
 name: Build and Release Rust Project
 
 on: 
-  workflow_dispatch:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
 
 jobs:
   build:
     name: Build Rust Project
     runs-on: windows-latest
-
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
-    - name: Install Rust
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        profile: minimal
-        override: true
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
 
-    - name: Install Protobuf Compiler
-      run: choco install protoc
+      - name: Install Protobuf Compiler
+        run: choco install protoc
 
-    - name: Build Release
-      run: cargo build --release
+      - name: Build Release
+        run: cargo build --release
 
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: rust-release-binary
-        path: target/release/beat-saber-maps-scraper.exe
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: rust-release-binary
+          path: target/release/beat-saber-maps-scraper.exe
 
   publish:
     name: Publish Release
@@ -38,21 +39,19 @@ jobs:
     permissions:
       contents: write
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
-    - name: Download Artifact
-      uses: actions/download-artifact@v3
-      with:
-        name: rust-release-binary
-        path: ./
+      - name: Download Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: rust-release-binary
+          path: ./
 
-    - name: Create Release
-      id: create_release
-      uses: ncipollo/release-action@v1
-      with:
-        name: Release ${{ github.sha }}
-        tag: "v${{ github.sha }}"
-        commit: ${{ github.sha }}
-        artifacts: "beat-saber-maps-scraper.exe"
-        draft: true
+      - name: Create Release
+        id: create_release
+        uses: ncipollo/release-action@v1
+        with:
+          name: ${{ github.ref_name }}
+          artifacts: "beat-saber-maps-scraper.exe"
+          draft: true
