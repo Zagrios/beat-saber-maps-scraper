@@ -55,3 +55,4 @@ jobs:
           name: ${{ github.ref_name }}
           artifacts: "beat-saber-maps-scraper.exe"
           draft: true
+          generateReleaseNotes: true
