@@ -8,7 +8,7 @@ pub mod song_details_json {
 
 
     impl SongDetails {
-        pub fn new(bsv_map: &MapDetail, bl_map_difficulties: Option<&Vec<DifficultyDescription>>, ss_leaderboards: Option<&Vec<LeaderboardInfo>>) -> SongDetails {
+        pub fn new(bsv_map: &MapDetail, bl_map_difficulties: Option<&Vec<DifficultyDescription>>, ss_leaderboards: Option<&Vec<LeaderboardInfo>>, uploader_list: &UploadersList, difficulty_labels: &Vec<String>) -> SongDetails {
             let mut difficulties: Vec<Difficulty> = Vec::new();
 
             for bsv_map_diff in &bsv_map.versions[0].diffs {
@@ -27,17 +27,16 @@ pub mod song_details_json {
                     None => None
                 };
 
-                difficulties.push(SongDetails::build_difficulty(bsv_map_diff, bl_map_diff, ss_leaderboard));
+                difficulties.push(SongDetails::build_difficulty(bsv_map_diff, bl_map_diff, ss_leaderboard, difficulty_labels));
             }
 
             SongDetails {
                 id_int: i32::from_str_radix(&bsv_map.id, 16).unwrap() as u32,
                 hash: bsv_map.versions.first().unwrap().hash.to_lowercase(),
                 duration: bsv_map.metadata.duration as u32,
-                uploader: Some(Uploader {
-                    name: bsv_map.uploader.name.clone(),
-                    id: bsv_map.uploader.id as u32,
-                    verified: bsv_map.uploader.verifiedMapper.unwrap_or(false)
+                uploader_ref: Some(UploaderRef {
+                    uploader_ref_index: uploader_list.ids.iter().position(|id| *id == bsv_map.uploader.id as u32).unwrap() as u32,
+                    verified: bsv_map.uploader.verifiedMapper.unwrap_or(false),
                 }),
                 uploaded_at: parse_date_rfc3339_to_timestamp(&bsv_map.uploaded) as u32,
                 tags: bsv_map.tags.clone().map_or(Vec::new(), |tags| tags.iter().map(|tag| MapTag::from_str(tag) as i32).collect()),
@@ -55,7 +54,7 @@ pub mod song_details_json {
             }
         }
 
-        fn build_difficulty(bsv_map_diff: &MapDiff, bl_map_diff: Option<&DifficultyDescription>, ss_leaderboard: Option<&LeaderboardInfo>) -> Difficulty {
+        fn build_difficulty(bsv_map_diff: &MapDiff, bl_map_diff: Option<&DifficultyDescription>, ss_leaderboard: Option<&LeaderboardInfo>, difficulty_labels: &Vec<String>) -> Difficulty {
 
             let stars = ss_leaderboard.map_or(bsv_map_diff.stars.unwrap_or(0.0), |ss| ss.stars);
             let bl_stars = bl_map_diff.map_or(0.0, |bl| bl.stars.unwrap_or(0.0));
@@ -63,7 +62,7 @@ pub mod song_details_json {
             Difficulty {
                 difficulty: DifficultyLabel::from_str(&bsv_map_diff.difficulty) as i32,
                 characteristic: DifficultyCharacteristic::from_str(&bsv_map_diff.characteristic) as i32,
-                label: bsv_map_diff.label.clone().unwrap_or(String::new()),
+                label_index: difficulty_labels.iter().position(|label| label == &bsv_map_diff.label.clone().unwrap_or("".to_string())).unwrap() as u32,
                 stars_t100: (stars * 100.0).round() as u32,
                 stars_bl_t100: (bl_stars * 100.0).round() as u32,
                 njs_t100: (bsv_map_diff.njs * 100.0).round() as u32,
@@ -77,6 +76,21 @@ pub mod song_details_json {
                 notes: bsv_map_diff.notes as u32,
                 obstacles: bsv_map_diff.obstacles as u32,
             }
+        }
+
+        pub fn extract_difficulty_labels(map: &MapDetail) -> Vec<String> {
+            let mut labels: Vec<String> = Vec::new();
+
+            for version in &map.versions {
+                for diff in &version.diffs {
+
+                    if !labels.contains(&diff.label.clone().unwrap_or("".to_string())) {
+                        labels.push(diff.label.clone().unwrap_or("".to_string()));
+                    }
+                }
+            }
+
+            labels
         }
     }
 
@@ -100,14 +114,17 @@ pub mod song_details_json {
 
         pub fn from_str(label: &str) -> DifficultyCharacteristic {
 
-            let lower_label = label.to_lowercase();
+            let lower_label = label.to_lowercase().replace(" ", "");
 
             match lower_label.as_str() {
                 "standard" => DifficultyCharacteristic::Standard,
+                "onesaber" => DifficultyCharacteristic::OneSaber,
                 "noarrows" => DifficultyCharacteristic::NoArrows,
-                "one saber" => DifficultyCharacteristic::OneSaber,
-                "90 degrees" => DifficultyCharacteristic::NinetyDegree,
-                "360 degrees" => DifficultyCharacteristic::ThreesixtyDegree,
+                "90degree" => DifficultyCharacteristic::NinetyDegree,
+                "360degree" => DifficultyCharacteristic::ThreesixtyDegree,
+                "lightshow" => DifficultyCharacteristic::Lightshow,
+                "lawless" => DifficultyCharacteristic::Lawless,
+                "legacy" => DifficultyCharacteristic::Legacy,
                 _ => DifficultyCharacteristic::UnknownCharacteristic
             }
         }

@@ -2,7 +2,7 @@ mod api;
 mod models;
 mod utils;
 
-use std::collections::HashMap;
+use std::collections::{HashMap};
 use std::io::{Read, Write};
 use std::path::PathBuf;
 use crate::api::beat_leader::leaderboard::leaderboards;
@@ -13,7 +13,7 @@ use crate::api::beat_saver::models::api_models::{SearchRequestParams, SearchRequ
 use crate::api::beat_saver::models::models::MapDetail;
 use crate::api::score_saber::models::api_models::LeaderboardRequestParams;
 use crate::api::score_saber::models::models::LeaderboardInfo;
-use crate::models::song_details_json::{SongDetails, SongDetailsCache};
+use crate::models::song_details_json::{SongDetails, SongDetailsCache, UploadersList};
 
 const OUT_DIR: &str = "out";
 const FILENAME : &str = "song_details_cache_v1";
@@ -23,25 +23,46 @@ async fn main() {
 
     let (bsv_maps, bl_maps_diffs, score_saber_leaderboards) = tokio::join!(scrap_bsv_maps(), scrap_bl_maps_diffs(), scrap_score_saber_leaderboards());
 
-    let mut song_details: Vec<SongDetails> = Vec::new();
+    let mut difficulty_labels: Vec<String> = vec![];
+    let mut uploader_list: UploadersList = UploadersList {
+        names: vec![],
+        ids: vec![]
+    };
+
+
+    let mut song_details: Vec<SongDetails> = vec![];
 
     for bsv_map in bsv_maps {
+
+        if(uploader_list.ids.iter().find(|&id| *id == bsv_map.uploader.id as u32).is_none()) {
+            uploader_list.ids.push(bsv_map.uploader.id as u32);
+            uploader_list.names.push(bsv_map.uploader.name.clone());
+        }
+
+        let map_diff_labels = SongDetails::extract_difficulty_labels(&bsv_map);
+        for label in map_diff_labels {
+            if !difficulty_labels.contains(&label) {
+                difficulty_labels.push(label);
+            }
+        }
+
         let hash = &bsv_map.versions.first().unwrap().hash;
         let bl_map_difficulties = bl_maps_diffs.get(hash);
         let ss_leaderboards = score_saber_leaderboards.get(hash);
-        song_details.push(SongDetails::new(&bsv_map, bl_map_difficulties, ss_leaderboards));
+        song_details.push(SongDetails::new(&bsv_map, bl_map_difficulties, ss_leaderboards, &uploader_list, &difficulty_labels));
     }
 
     println!("Scrapped {} song details", song_details.len());
 
-    write_to_json(&song_details);
-
     let song_details_cache = SongDetailsCache {
         total: song_details.len() as u32,
         songs: song_details,
-        last_updated: chrono::Utc::now().timestamp() as u32
+        last_updated: chrono::Utc::now().timestamp() as u32,
+        uploaders: Some(uploader_list),
+        difficulty_labels: difficulty_labels.iter().map(|label| label.to_string()).collect()
     };
 
+    write_to_json(&song_details_cache);
     write_proto_message(&song_details_cache);
 
     gzip_generated_files();
