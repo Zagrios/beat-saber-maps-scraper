@@ -6,6 +6,7 @@ pub mod song_details_json {
 
     include!(concat!(env!("OUT_DIR"), "/song_details_cache_v1.rs"));
 
+    const hashChars: [char; 16] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'];
 
     impl SongDetails {
         pub fn new(bsv_map: &MapDetail, bl_map_difficulties: Option<&Vec<DifficultyDescription>>, ss_leaderboards: Option<&Vec<LeaderboardInfo>>, uploader_list: &UploadersList, difficulty_labels: &Vec<String>) -> SongDetails {
@@ -32,7 +33,8 @@ pub mod song_details_json {
 
             SongDetails {
                 id_int: i32::from_str_radix(&bsv_map.id, 16).unwrap() as u32,
-                hash: bsv_map.versions.first().unwrap().hash.to_lowercase(),
+                hash_indices: bsv_map.versions[0].hash.chars().map(|c| hashChars.iter().position(|&x| x == c).unwrap() as u32).collect(),
+                name: bsv_map.name.chars().take(50).collect(),
                 duration: bsv_map.metadata.duration as u32,
                 uploader_ref: Some(UploaderRef {
                     uploader_ref_index: uploader_list.ids.iter().position(|id| *id == bsv_map.uploader.id as u32).unwrap() as u32,

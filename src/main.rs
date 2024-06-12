@@ -34,7 +34,7 @@ async fn main() {
 
     for bsv_map in bsv_maps {
 
-        if(uploader_list.ids.iter().find(|&id| *id == bsv_map.uploader.id as u32).is_none()) {
+        if uploader_list.ids.iter().find(|&id| *id == bsv_map.uploader.id as u32).is_none() {
             uploader_list.ids.push(bsv_map.uploader.id as u32);
             uploader_list.names.push(bsv_map.uploader.name.clone());
         }
