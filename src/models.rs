@@ -179,7 +179,7 @@ pub mod song_details_json {
                 "accuracy" => MapTag::Accuracy,
                 "balanced" => MapTag::Balanced,
                 "challenge" => MapTag::Challenge,
-                "dancestyle" => MapTag::Dancestyle,
+                "dance-style" => MapTag::Dancestyle,
                 "fitness" => MapTag::Fitness,
                 "speed" => MapTag::Speed,
                 "tech" => MapTag::Tech,
