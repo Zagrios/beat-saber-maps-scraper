@@ -1,51 +1,61 @@
 use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct MapDetail {
     pub automapper: bool,
+    pub bl_qualified: bool,
+    pub bl_ranked: bool,
     pub bookmarked: Option<bool>,
     #[serde(skip_serializing, skip_deserializing)]
     pub collaborators: Option<Vec<UserDetail>>,
-    pub createdAt: Option<String>,
-    pub curatedAt: Option<String>,
+    pub created_at: Option<String>,
+    pub curated_at: Option<String>,
     pub curator: Option<UserDetail>,
-    pub declaredAi: String,
-    pub deletedAt: Option<String>,
+    pub declared_ai: String,
+    pub deleted_at: Option<String>,
     pub description: String,
     pub id: String,
-    pub lastPublishedAt: String,
+    pub last_published_at: String,
     pub metadata: MapDetailMetadata,
     pub name: String,
+    pub nsfw: Option<bool>,
     pub qualified: bool,
     pub ranked: bool,
     pub stats: MapStats,
     pub tags: Option<Vec<String>>,
-    pub updatedAt: String,
+    pub updated_at: String,
     pub uploaded: String,
     pub uploader: UserDetail,
     pub versions: Vec<MapVersion>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct MapVersion {
-    pub coverURL: String,
-    pub createdAt: String,
+    #[serde(rename = "coverURL")] // rename from coverURL
+    pub cover_url: String,
+    pub created_at: String,
     pub diffs: Vec<MapDiff>,
-    pub downloadURL: String,
+    #[serde(rename = "downloadURL")] // rename from downloadURL
+    pub download_url: String,
     pub feedback: Option<String>,
     pub hash: String,
     pub key: Option<String>,
-    pub previewURL: String,
-    pub sageScore: Option<f32>,
-    pub schelduledAt: Option<String>,
+    #[serde(rename = "previewURL")] // rename from previewURL
+    pub preview_url: String,
+    pub sage_score: Option<f32>,
+    pub schelduled_at: Option<String>,
     pub state: String,
-    pub testPlayAt: Option<String>,
+    pub test_play_at: Option<String>,
     #[serde(skip_serializing, skip_deserializing)]
-    pub testPlays: Option<Vec<MapTestplay>>
+    pub test_plays: Option<Vec<MapTestplay>>
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct MapDiff {
+    pub bl_stars: Option<f32>,
     pub bombs: i32,
     pub characteristic: String,
     pub chroma: Option<bool>,
@@ -54,7 +64,7 @@ pub struct MapDiff {
     pub events: i32,
     pub label: Option<String>,
     pub length: f32,
-    pub maxScore: i32,
+    pub max_score: i32,
     pub me: Option<bool>,
     pub ne: Option<bool>,
     pub njs: f32,
@@ -63,7 +73,7 @@ pub struct MapDiff {
     pub obstacles: i32,
     pub offset: f32,
     #[serde(skip_serializing, skip_deserializing)]
-    pub paritySummary: MapParitySummary,
+    pub parity_summary: MapParitySummary,
     pub seconds: f32,
     pub stars: Option<f32>,
 }
@@ -77,61 +87,66 @@ pub struct MapParitySummary {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct MapTestplay {
-    pub createdAt: String,
+    pub created_at: String,
     pub feedback: Option<String>,
-    pub feedbackAt: Option<String>,
+    pub feedback_at: Option<String>,
     pub user: UserDetail,
     pub version: String
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 #[derive(Clone)]
 pub struct MapDetailMetadata {
     pub bpm: f32,
     pub duration: i32,
-    pub levelAuthorName: String,
-    pub songAuthorName: String,
-    pub songName: String,
-    pub songSubName: String,
+    pub level_author_name: String,
+    pub song_author_name: String,
+    pub song_name: String,
+    pub song_sub_name: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct MapStats {
     pub downloads: i32,
     pub downvotes: i32,
     pub plays: i32,
     pub reviews: Option<i32>,
     pub score: f32,
-    pub scoreOneDP: Option<f32>,
+    pub score_one_dp: Option<f32>,
     pub sentiment: Option<String>,
     pub upvotes: i32
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct UserDetail {
     pub admin: bool,
     pub avatar: String,
     pub curator: bool,
-    pub curatorTab: Option<bool>,
+    pub curator_tab: Option<bool>,
     pub description: Option<String>,
     pub email: Option<String>,
-    pub followData: Option<UserFollowData>,
+    pub follow_data: Option<UserFollowData>,
     pub hash: Option<String>,
     pub id: i32,
     pub name: String,
     pub patreon: Option<String>,
-    pub playlistUrl: String,
+    pub playlist_url: String,
     pub stats: Option<UserStats>,
-    pub suspendedAt: Option<String>,
+    pub suspended_at: Option<String>,
     pub testplay: Option<bool>,
     pub r#type: String,
-    pub uniqueSet: Option<bool>,
-    pub uploadLimit: Option<i32>,
-    pub verifiedMapper: Option<bool>
+    pub unique_set: Option<bool>,
+    pub upload_limit: Option<i32>,
+    pub verified_mapper: Option<bool>
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct UserFollowData {
     pub curation: bool,
     pub followers: i32,
@@ -140,24 +155,26 @@ pub struct UserFollowData {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct UserStats {
-    pub avgBpm: f32,
-    pub avgDuration: f32,
-    pub avgScore: f32,
-    pub diffStats: UserDiffStats,
-    pub firstUpload: String,
-    pub lastUpload: String,
-    pub rankedMaps: i32,
-    pub totalDownvotes: i32,
-    pub totalMaps: i32,
-    pub totalUpvotes: i32,
+    pub avg_bpm: f32,
+    pub avg_duration: f32,
+    pub avg_score: f32,
+    pub diff_stats: UserDiffStats,
+    pub first_upload: String,
+    pub last_upload: String,
+    pub ranked_maps: i32,
+    pub total_downvotes: i32,
+    pub total_maps: i32,
+    pub total_upvotes: i32,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct UserDiffStats {
     pub easy: i32,
     pub expert: i32,
-    pub expertPlus: i32,
+    pub expert_plus: i32,
     pub hard: i32,
     pub normal: i32,
     pub total: i32

@@ -1,52 +1,31 @@
 pub mod song_details_json {
-    use crate::api::beat_leader::models::models::DifficultyDescription;
     use crate::api::beat_saver::models::models::{MapDetail, MapDiff};
-    use crate::api::score_saber::models::models::LeaderboardInfo;
     use crate::utils::parse_date_rfc3339_to_timestamp;
 
     include!(concat!(env!("OUT_DIR"), "/song_details_cache_v1.rs"));
 
-    const hashChars: [char; 16] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'];
+    const HASH_CHARS: [char; 16] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'];
 
     impl SongDetails {
-        pub fn new(bsv_map: &MapDetail, bl_map_difficulties: Option<&Vec<DifficultyDescription>>, ss_leaderboards: Option<&Vec<LeaderboardInfo>>, uploader_list: &UploadersList, difficulty_labels: &Vec<String>) -> SongDetails {
-            let mut difficulties: Vec<Difficulty> = Vec::new();
-
-            for bsv_map_diff in &bsv_map.versions[0].diffs {
-
-                let bl_map_diff = match bl_map_difficulties {
-                    Some(diffs) => diffs.iter().find(|&diff| {
-                        return diff.difficultyName == Some(bsv_map_diff.difficulty.to_string()) && diff.modeName == Some(bsv_map_diff.characteristic.to_string());
-                    }),
-                    None => None
-                };
-
-                let ss_leaderboard = match ss_leaderboards {
-                    Some(leaderboards) => leaderboards.iter().find(|&leaderboard| {
-                        return leaderboard.difficulty.get_difficulty_string() == bsv_map_diff.difficulty.to_string() && leaderboard.difficulty.get_characteristic_string() == bsv_map_diff.characteristic.to_string();
-                    }),
-                    None => None
-                };
-
-                difficulties.push(SongDetails::build_difficulty(bsv_map_diff, bl_map_diff, ss_leaderboard, difficulty_labels));
-            }
+        pub fn new(bsv_map: &MapDetail, uploader_list: &UploadersList, difficulty_labels: &Vec<String>) -> SongDetails {
+            let difficulties: Vec<Difficulty> = bsv_map.versions[0].diffs.iter().map(|diff| SongDetails::build_difficulty(diff, difficulty_labels)).collect();
 
             SongDetails {
                 id_int: i32::from_str_radix(&bsv_map.id, 16).unwrap() as u32,
-                hash_indices: bsv_map.versions[0].hash.chars().map(|c| hashChars.iter().position(|&x| x == c).unwrap() as u32).collect(),
+                hash_indices: bsv_map.versions[0].hash.chars().map(|c| HASH_CHARS.iter().position(|&x| x == c).unwrap() as u32).collect(),
                 name: bsv_map.name.chars().take(50).collect(),
                 duration: bsv_map.metadata.duration as u32,
                 uploader_ref: Some(UploaderRef {
                     uploader_ref_index: uploader_list.ids.iter().position(|id| *id == bsv_map.uploader.id as u32).unwrap() as u32,
-                    verified: bsv_map.uploader.verifiedMapper.unwrap_or(false),
+                    verified: bsv_map.uploader.verified_mapper.unwrap_or(false),
                 }),
                 uploaded_at: parse_date_rfc3339_to_timestamp(&bsv_map.uploaded) as u32,
                 tags: bsv_map.tags.clone().map_or(Vec::new(), |tags| tags.iter().map(|tag| MapTag::from_str(tag) as i32).collect()),
-                ranked: ss_leaderboards.map_or(bsv_map.ranked, |leaderboards| leaderboards.iter().any(|leaderboard| leaderboard.ranked)),
-                qualified: ss_leaderboards.map_or(bsv_map.qualified, |leaderboards| leaderboards.iter().any(|leaderboard| leaderboard.qualified)),
-                curated: bsv_map.curatedAt.clone().map_or(false, |_| true),
-                bl_ranked: bl_map_difficulties.map_or(false, |diffs| diffs.iter().any(|diff| diff.rankedTime.map_or(false, |time| time > 0))),
-                bl_qualified: bl_map_difficulties.map_or(false, |diffs| diffs.iter().any(|diff| diff.qualifiedTime.map_or(false, |time| time > 0))),
+                ranked: bsv_map.ranked,
+                qualified: bsv_map.qualified,
+                curated: bsv_map.curated_at.is_some(),
+                bl_ranked: bsv_map.bl_ranked,
+                bl_qualified: bsv_map.bl_qualified,
                 up_votes: bsv_map.stats.upvotes as u32,
                 down_votes: bsv_map.stats.downvotes as u32,
                 downloads: bsv_map.stats.downloads as u32,
@@ -55,17 +34,14 @@ pub mod song_details_json {
             }
         }
 
-        fn build_difficulty(bsv_map_diff: &MapDiff, bl_map_diff: Option<&DifficultyDescription>, ss_leaderboard: Option<&LeaderboardInfo>, difficulty_labels: &Vec<String>) -> Difficulty {
-
-            let stars = ss_leaderboard.map_or(bsv_map_diff.stars.unwrap_or(0.0), |ss| ss.stars);
-            let bl_stars = bl_map_diff.map_or(0.0, |bl| bl.stars.unwrap_or(0.0));
+        fn build_difficulty(bsv_map_diff: &MapDiff, difficulty_labels: &Vec<String>) -> Difficulty {
 
             Difficulty {
                 difficulty: DifficultyLabel::from_str(&bsv_map_diff.difficulty) as i32,
                 characteristic: DifficultyCharacteristic::from_str(&bsv_map_diff.characteristic) as i32,
                 label_index: difficulty_labels.iter().position(|label| label == &bsv_map_diff.label.clone().unwrap_or("".to_string())).unwrap() as u32,
-                stars_t100: (stars * 100.0).round() as u32,
-                stars_bl_t100: (bl_stars * 100.0).round() as u32,
+                stars_t100: (bsv_map_diff.stars.unwrap_or(0.0) * 100.0).round() as u32,
+                stars_bl_t100: (bsv_map_diff.bl_stars.unwrap_or(0.0) * 100.0).round() as u32,
                 njs_t100: (bsv_map_diff.njs * 100.0).round() as u32,
                 nps_t100: (bsv_map_diff.nps * 100.0).round() as u32,
                 offset_t100: (bsv_map_diff.offset * 100.0).round() as i32,
